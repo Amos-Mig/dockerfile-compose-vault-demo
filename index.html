@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='utf-8'>
+<meta name='viewport' content='width=device-width,initial-scale=1'>
+<meta property='og:url' content='https://amos-mig.github.io/dockerfile-compose-vault-demo/'>
+<link rel='canonical' href='https://amos-mig.github.io/dockerfile-compose-vault-demo/'>
+<title>Docker Compose Multi-Service Stack — live demo</title>
+<style>
+:root{--bg:#0b0d12;--pn:#14171f;--bd:#262b36;--tx:#e8eaf0;--mu:#9aa3b2;--ac:#10b981}
+*{box-sizing:border-box;margin:0}
+body{background:var(--bg);color:var(--tx);font:15px/1.55 system-ui,sans-serif}
+a{color:var(--ac);text-decoration:none}
+a:hover{text-decoration:underline}
+.wrap{max-width:1080px;margin:0 auto;padding:0 18px}
+.ban{background:var(--ac);color:#03130d;font-weight:600;font-size:13px;text-align:center;padding:8px 14px}
+header{padding:40px 0 6px;text-align:center}
+h1{font-size:clamp(24px,4.5vw,38px);letter-spacing:-.5px}
+h1 em{color:var(--ac);font-style:normal}
+.sub{color:var(--mu);max-width:680px;margin:12px auto 0}
+h2{font-size:12px;text-transform:uppercase;letter-spacing:1.6px;color:var(--mu);margin:36px 0 12px}
+.stage{display:grid;grid-template-columns:1.25fr 1fr;gap:14px}
+@media(max-width:860px){.stage{grid-template-columns:1fr}}
+.panel{background:var(--pn);border:1px solid var(--bd);border-radius:10px;overflow:hidden;display:flex;flex-direction:column}
+.ph{display:flex;gap:6px;padding:10px 12px;border-bottom:1px solid var(--bd);align-items:center}
+.ph i{width:10px;height:10px;border-radius:50%;background:#2b3242}
+.ph span{font:12px ui-monospace,Menlo,monospace;color:var(--mu);margin-left:6px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;padding:8px 10px;border-bottom:1px solid var(--bd)}
+.chip{font:12px ui-monospace,Menlo,monospace;background:#1b202b;border:1px solid var(--bd);color:var(--tx);border-radius:6px;padding:4px 9px;cursor:pointer}
+.chip:hover:not(:disabled){border-color:var(--ac);color:var(--ac)}
+.chip:disabled{opacity:.4;cursor:default}
+#term{padding:12px 14px;height:330px;overflow-y:auto;font:12.5px/1.75 ui-monospace,Menlo,monospace;flex:1}
+.ln{white-space:pre-wrap;color:var(--mu)}
+.ln.cmd{color:var(--tx)}
+.ln .p{color:var(--ac)}
+.ln.ok{color:var(--ac)}
+.ln.err{color:#ef4444}
+.ln.acc{color:var(--tx)}
+.pr{display:flex;gap:8px;align-items:center;border-top:1px solid var(--bd);padding:10px 14px;font:12.5px ui-monospace,Menlo,monospace}
+.pr b{color:var(--ac);white-space:nowrap;font-weight:600}
+.pr input{flex:1;background:none;border:0;outline:0;color:var(--tx);font:inherit;min-width:0}
+.svcs{display:grid;gap:10px;padding:12px}
+.svc{border:1px solid var(--bd);border-radius:8px;padding:10px 12px;background:#10131b}
+.svc-h{display:flex;align-items:center;gap:8px;font:13px ui-monospace,Menlo,monospace}
+.dot{width:9px;height:9px;border-radius:50%;background:#39415a;flex:none}
+.dot.s{background:#f59e0b;box-shadow:0 0 8px #f59e0b}
+.dot.h{background:var(--ac);box-shadow:0 0 8px var(--ac)}
+.dot.x{background:#ef4444}
+.badge{margin-left:auto;font-size:11px;color:var(--mu);text-transform:uppercase;letter-spacing:.6px}
+.meta{font:11.5px ui-monospace,Menlo,monospace;color:var(--mu);margin-top:5px;word-break:break-all}
+.tl{color:var(--mu);font-size:12px;padding:0 14px 12px}
+.tl code{color:var(--tx)}
+code{font:12.5px ui-monospace,Menlo,monospace;background:#10131b;border:1px solid var(--bd);border-radius:4px;padding:1px 5px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+.card{background:var(--pn);border:1px solid var(--bd);border-radius:10px;padding:16px}
+.card h3{font-size:15px;margin-bottom:6px}
+.card p{color:var(--mu);font-size:13.5px}
+.card.lock{border-style:dashed}
+.card.lock h3{color:var(--mu)}
+pre{background:#10131b;border:1px solid var(--bd);border-radius:10px;padding:14px 16px;overflow-x:auto;font:12.5px/1.65 ui-monospace,Menlo,monospace;color:#c9d1e0}
+.note{color:var(--mu);font-size:13px;margin-top:8px}
+.buy{text-align:center;padding:8px 0}
+.cta{display:inline-block;background:var(--ac);color:#03130d;font-weight:700;padding:13px 28px;border-radius:8px;margin:6px 0 2px}
+.cta:hover{filter:brightness(1.08);text-decoration:none}
+.buy p{color:var(--mu);font-size:13px}
+footer{border-top:1px solid var(--bd);margin-top:44px;padding:22px 18px 40px;display:flex;gap:18px;flex-wrap:wrap;justify-content:center;color:var(--mu);font-size:13px}
+</style>
+</head>
+<body>
+<div class='ban'>Live demo — simulated run with canned output. The full product ships the real, tested compose files ↓</div>
+<header class='wrap'><h1 id='t'>Docker Compose Multi-Service Stack</h1><p class='sub'>An optimized compose file wiring Node.js, FastAPI, PostgreSQL and Redis with health checks and proper volume mounts — stop debugging container orchestration on every new project.</p></header>
+<main class='wrap'>
+<h2>Try it — the stack, simulated live</h2>
+<div class='stage'>
+<div class='panel'>
+<div class='ph'><i></i><i></i><i></i><span>stack — compose · simulated</span></div>
+<div class='chips' id='chips'></div>
+<div id='term'></div>
+<div class='pr'><b>stack@demo:~$</b><input id='in' autocomplete='off' spellcheck='false' placeholder='type a command… try "help"'></div>
+</div>
+<div class='panel'>
+<div class='ph'><i></i><i></i><i></i><span>services — 4 containers</span></div>
+<div class='svcs' id='svcs'></div>
+<p class='tl'>Green dot = healthcheck passed. Watch the order: postgres &amp; redis first, then api, then web — gated by <code>depends_on: service_healthy</code>.</p>
+</div>
+</div>
+<h2>What's in the kit</h2>
+<div class='cards'>
+<div class='card'><h3>✓ Four services, pre-wired</h3><p>Node.js web app, FastAPI backend, PostgreSQL 16 and Redis 7 — networked and named from the very first <code>compose up</code>.</p></div>
+<div class='card'><h3>✓ Health checks &amp; startup ordering</h3><p>Every service declares a real healthcheck; dependents boot only on <code>condition: service_healthy</code>. No more race-condition crashes on cold starts.</p></div>
+<div class='card'><h3>✓ Volumes &amp; env, organized</h3><p>Named volumes for pgdata and redis data, bind mounts for hot reload, per-service env templating — hygiene that holds up in real projects.</p></div>
+<div class='card lock'><h3>🔒 compose.prod.yml override</h3><p>Resource limits, restart policies, pinned images and a logging driver for small production deployments — in the full kit.</p></div>
+<div class='card lock'><h3>🔒 One-command bootstrap</h3><p>A Makefile + init script that scaffolds this stack into any new repo with a single <code>make new</code> — in the full kit.</p></div>
+</div>
+<h2>Inside the file (excerpt)</h2>
+<pre>services:
+  postgres:
+    image: postgres:16-alpine
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  api:
+    depends_on:
+      postgres:
+        condition: service_healthy   # boots only when postgres is ready
+      redis:
+        condition: service_healthy</pre>
+<p class='note'>Excerpt only — the full file covers all four services, named volumes, per-service env files and the production override.</p>
+<div class='buy'>
+<h2>Stop debugging orchestration on every new project</h2>
+<a class='cta' href='https://amosmign.gumroad.com/l/dockerfile-compose-vault'>Get the full stack · $14</a>
+<p>Plain <code>docker compose</code>, no extra tooling — tuned for local dev and small production deployments.</p>
+</div>
+</main>
+<footer><span>Docker Compose Multi-Service Stack</span><a href='https://kits.amosmignery.dev'>kits.amosmignery.dev</a><a href='https://github.com/Amos-Mig/dockerfile-compose-vault-demo'>GitHub</a><a href='https://amosmign.gumroad.com/l/dockerfile-compose-vault'>Buy the kit</a></footer>
+<script>
+const $=i=>document.getElementById(i),term=$('term'),sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const h=$('t');h.innerHTML=h.textContent.replace('Multi-Service Stack','<em>Multi-Service Stack</em>');
+const S=[{n:'redis',img:'redis:7-alpine',port:'6379',dep:[]},{n:'postgres',img:'postgres:16-alpine',port:'5432',dep:[]},{n:'api',img:'fastapi · uvicorn',port:'8000',dep:['postgres','redis']},{n:'web',img:'node:20 · npm run dev',port:'3000',dep:['api']}];
+const st={};
+S.forEach(s=>{st[s.n]={mode:'pending',t:0,id:''};s.meta=s.img+' · :'+s.port+(s.dep.length?' · waits: '+s.dep.join(', '):'');$('svcs').insertAdjacentHTML('beforeend','<div class="svc"><div class="svc-h"><span class="dot" id="d'+s.n+'"></span><b>'+s.n+'</b><span class="badge" id="b'+s.n+'">pending</span></div><div class="meta" id="m'+s.n+'">'+s.meta+'</div></div>')});
+const cid=()=>[...crypto.getRandomValues(new Uint8Array(6))].map(b=>b.toString(16).padStart(2,'0')).join('');
+function ln(t,c){const d=document.createElement('div');d.className='ln'+(c?' '+c:'');d.textContent=t;term.appendChild(d);term.scrollTop=term.scrollHeight}
+async function tcmd(c){const d=document.createElement('div');d.className='ln cmd';const p=document.createElement('span');p.className='p';p.textContent='stack@demo:~$ ';const s=document.createElement('span');d.append(p,s);term.appendChild(d);for(const ch of c){s.textContent+=ch;await sleep(15)}term.scrollTop=term.scrollHeight;await sleep(130)}
+function setSt(s){const o=st[s.n];$('d'+s.n).className='dot '+(o.mode==='healthy'?'h':o.mode==='starting'?'s':o.mode==='down'?'x':'');$('b'+s.n).textContent=o.mode==='down'?'exited':o.mode;$('m'+s.n).textContent=s.meta+(o.id?' · '+o.id:'')}
+let busy=false;const chips=$('chips');
+['docker compose up -d','docker compose ps','docker compose logs api','docker compose down','help'].forEach(c=>{const b=document.createElement('button');b.className='chip';b.textContent=c;b.onclick=()=>run(c);chips.appendChild(b)});
+function lock(v){busy=v;[...chips.children].forEach(b=>b.disabled=v);$('in').disabled=v}
+async function up(){if(busy)return;lock(true);await tcmd('docker compose up -d');
+ln('[+] Running 8/8');await sleep(300);
+ln(' ✔ Network  stack_default     Created');await sleep(280);
+for(const s of S){const o=st[s.n];
+if(o.mode==='healthy'){ln(' ● Container '+s.n+'-1           Running (healthy)');continue}
+o.mode='starting';o.id=cid();setSt(s);
+ln(' ✔ Container '+s.n+'-1           Created');await sleep(220);
+ln(' ⠿ Container '+s.n+'-1           healthcheck running…');await sleep(500+Math.random()*400);
+o.mode='healthy';o.t=Date.now();setSt(s);
+ln(' ✔ Container '+s.n+'-1           Healthy','ok');await sleep(170)}
+ln('');
+ln('4/4 healthy — redis + postgres first, api and web waited on service_healthy','acc');lock(false)}
+async function ps(){if(busy)return;lock(true);await tcmd('docker compose ps');
+if(!Object.values(st).some(o=>o.mode==='healthy')){ln('no containers running — try: docker compose up -d','err');return lock(false)}
+ln('NAME           STATUS','acc');
+S.slice().reverse().forEach(s=>{const o=st[s.n];const u=o.mode==='healthy'?'Up '+Math.max(1,Math.round((Date.now()-o.t)/1000))+'s (healthy)':'exited';ln((s.n+'-1').padEnd(15)+u,o.mode==='healthy'?'ok':'err')});lock(false)}
+async function logs(){if(busy)return;lock(true);await tcmd('docker compose logs api');
+if(st.api.mode!=='healthy'){ln('error: api-1 is not running — try: docker compose up -d','err');return lock(false)}
+ln('attaching to api-1');
+for(const p of [['api-1  | INFO:     Started server process [1]',''],['api-1  | INFO:     postgres: connection ok · redis: PING → PONG',''],['api-1  | INFO:     Uvicorn running on http://0.0.0.0:8000',''],['api-1  | INFO:     172.19.0.3:41208 - "GET /health" 200 OK','ok']]){ln(p[0],p[1]);await sleep(220)}lock(false)}
+async function down(){if(busy)return;lock(true);await tcmd('docker compose down');
+for(const s of S.slice().reverse()){const o=st[s.n];if(o.mode==='pending')continue;ln(' ✔ Container '+s.n+'-1           Stopped');o.mode='down';setSt(s);await sleep(230)}
+ln(' ✔ Network  stack_default     Removed');
+ln('volumes kept — pgdata + redis-data survive restarts','acc');lock(false)}
+async function help(){if(busy)return;await tcmd('help');ln('commands:','acc');ln('  docker compose up -d     boot all 4 services, health-gated order');ln('  docker compose ps        status + uptime per container');ln('  docker compose logs api  tail the FastAPI service');ln('  docker compose down      stop everything, keep volumes')}
+function run(c){const x=c.trim().toLowerCase().replace(/^docker\s+/,'').replace(/^compose\s+/,'');
+if(x.startsWith('up'))up();else if(x.startsWith('ps'))ps();else if(x.startsWith('logs'))logs();else if(x.startsWith('down'))down();else if(!x||x==='help')help();else ln('unknown command: '+c.trim()+'  — type "help"','err')}
+$('in').addEventListener('keydown',e=>{if(e.key==='Enter'){run(e.target.value);e.target.value=''}});
+ln('compose stack simulator — 4 services, health-gated startup (simulated client-side)','acc');
+setTimeout(up,600);
+</script>
+</body>
+</html>
